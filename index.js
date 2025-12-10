@@ -41,18 +41,6 @@ if (attachments.length > 0) payload.files = attachments;
 return this.send(payload);
 };
 
-
-BaseChannel.prototype.send = async function (...config) {
-const { container, attachments } = buildMessageComponents(...config);
-const payload = {
-components: [container],
-flags: MessageFlags.IsComponentsV2,
-};
-if (attachments.length > 0) payload.files = attachments;
-return this.send(payload);
-};
-
-
 Message.prototype.editMsg = async function (...config) {
 const { container, attachments } = buildMessageComponents(...config);
 const payload = {
@@ -257,13 +245,33 @@ database[member.guild.id].welcomeChannel
 );
 }
 if (channel) {
-channel.sendMessage([
+channel.send({
+flags: 32768,
+files: [{attachment:buffer, name: 'welcome-card.png'}],
+components: [
 {
-type: "text",
-content: `# Welcome to ${member.guild.name}, ${member.user}!`,
+type: 17,
+accent_color: 181404,
+spoiler: false,
+components: [
+{
+type: 12,
+items: [
+{
+media: {
+url: "attachment://welcome-card.png"
+}
+}
+]
 },
-{ type: "image", url: "attachment://welcome-card.png", buffer },
-]);
+{
+type: 10,
+content: `# Welcome aboard, ${member.user}\nYou’ve officially landed in a space where ideas evolve, creativity syncs, and the community vibes like a well-structured ecosystem.\nHere, every new member adds a fresh spark — and trust me, we’re all about building momentum.\nFeel free to roam, drop a hello, or dive straight into the convo. This place grows because people like you jump in.\n\n## Getting Started\n\n1. Check the rules — keep the place clean and drama-free, just like a production server.\n2. Peek into the channels — each one has its own purpose, workflow, and energy.\n3. Introduce yourself — we’re a community, not a ghost town.\n4. Grab any roles you need — think of it as configuring your user profile in the system.\n5. If you're lost, ping the mods — they’re basically customer support but with more patience.\n\nYou’re all set. Time to plug in and start building memories.`
+},
+]
+},
+]
+});
 }
 } catch (error) {
 client.logger("error", `Error generating welcome card:', ${error}`);

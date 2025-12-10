@@ -1,10 +1,10 @@
-import util from "node:util"
+import util from "node:util";
+
 export default {
 name: "help",
-description: "Show all commands by category",
+description: "Show all commands with navigation",
 async execute(message, args, client) {
 try {
-// 🎨 Mapping kategori ke icon
 const categoryIcons = {
 Music: "<:Music:1446441038540439634>",
 Owner: "<:King:1446440984178200666>",
@@ -22,70 +22,100 @@ if (!grouped[category]) grouped[category] = [];
 grouped[category].push(cmd);
 }
 
-let output = "";
+const pages = [];
+let pageIndex = 0;
 
+// ====== PAGE 1: INTRO ======
+pages.push({
+title: "<:Book:1446446420566478940> Welcome",
+content:
+"**Welcome to the Command Center.**\n" +
+"You’re now accessing the core control panel of this system — the place where every feature, tool, and workflow is neatly organized for operational excellence.\n" +
+"Use the navigation buttons below to explore categories, review capabilities, and optimize how you interact with the bot.\n\n" +
+"**Getting Started:**\n" +
+"- Review each category to understand the available functionality\n" +
+"- All commands are triggered using the ! prefix\n" +
+"- Select Next to move through the directory\n" +
+"Efficiency is the priority — take your time, explore, execute"
+});
+
+// ====== OTHER PAGES FOR EACH CATEGORY ======
 for (const category in grouped) {
-// Ambil icon dari mapping, fallback ke default icon
 const icon =
 categoryIcons[category] || "<:Interrogation:1446443210749509672>";
 
-output += `## ${icon} ${category}\n`;
+let text = `## ${icon} ${category}\n`;
 for (const cmd of grouped[category]) {
-output += `- **!${cmd.name}** — ${
+text += `- **!${cmd.name}** — ${
 cmd.description || "No description"
 }\n`;
 }
-output += "\n";
+
+pages.push({
+title: `${icon} ${category}`,
+content: text.trim(),
+});
 }
 
-await message.reply({
-"flags": 32768,
-"components": [
+pages.push({
+title: "📌 Summary",
+content:
+`Total Commands: **${client.commands.size}**\n` +
+"Thanks for using this bot — keep building greatness."
+});
+
+const generatePayload = () => ({
+flags: 32768,
+components: [
 {
-"type": 17,
-"accent_color": 58878,
-"spoiler": false,
-"components": [
+type: 17,
+accent_color: 58878,
+components: [
 {
-"type": 10,
-"content": "<:Book:1446446420566478940> Command Directory"
+type: 10,
+content: pages[pageIndex].content,
 },
 {
-"type": 10,
-"content": output.trim()
+type: 1,
+components: [
+{
+type: 2,
+style: 2,
+custom_id: "back",
+label: "Back",
+disabled: pageIndex === 0,
 },
 {
-"type": 10,
-"content": `Total Commands: ${client.commands.size}`
+type: 2,
+style: 2,
+custom_id: "next",
+label: "Next",
+disabled: pageIndex === pages.length - 1,
 },
-{
-"type": 1,
-"components": [
-{
-"type": 2,
-"style": 5,
-"emoji": {
-"id": "1446440997318951022",
-"name": "Link",
-"animated": false
+],
 },
-"url": "https://github.com/SatzzDev",
+],
 },
-{
-"type": 2,
-"style": 5,
-"emoji": {
-"id": "1446446420566478940",
-"name": "Book",
-"animated": false
-},
-"url": "https://discord.js.org/",
-}
-]
-}
-]
-}
-]
+],
+});
+
+const msg = await message.reply(generatePayload());
+
+const collector = msg.createMessageComponentCollector({
+time: 60_000,
+});
+
+collector.on("collect", async (i) => {
+if (i.user.id !== message.author.id) return i.deferUpdate();
+if (i.customId === "next") pageIndex++;
+if (i.customId === "back") pageIndex--;
+await i.update(generatePayload());
+});
+
+collector.on("end", async () => {
+msg.edit({
+components: [],
+}).catch(() => {});
 });
 } catch (error) {
 console.error(util.format(error));
