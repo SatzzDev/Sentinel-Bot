@@ -7,15 +7,24 @@ export default {
 
   async execute(message, args, client) {
     const query = args.join(" ");
-    if (!query) return message.reply("masukin pertanyaan dulu lah 😭");
+if (!query) return message.reply({
+  components: [
+    {
+      type: 17,
+      components: [
+        { type: 10, content: "masukin pertanyaan dulu lah 😭" }
+      ]
+    }
+  ]
+});
 
-    await message.channel.sendTyping();
+await message.channel.sendTyping();
 
-    const url = `https://www.searchapi.io/api/v1/search?api_key=BLScazexjBZXawiAroPk6dY2&engine=google_ai_mode&q=${encodeURIComponent(
-      query
-    )}`;
-    const req = await fetch(url);
-    const data = await req.json();
+const url = `https://www.searchapi.io/api/v1/search?api_key=BLScazexjBZXawiAroPk6dY2&engine=google_ai_mode&q=${encodeURIComponent(
+  query
+)}`;
+const req = await fetch(url);
+const data = await req.json();
 
     // Parse markdown ke text_blocks structure
     const textBlocks = parseMarkdownToBlocks(data.markdown);
