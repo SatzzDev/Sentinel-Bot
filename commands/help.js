@@ -31,7 +31,7 @@ categoryIcons[category] || "<:Interrogation:1446443210749509672>";
 
 output += `## ${icon} ${category}\n`;
 for (const cmd of grouped[category]) {
-output += `- **.${cmd.name}** — ${
+output += `- **!${cmd.name}** — ${
 cmd.description || "No description"
 }\n`;
 }
