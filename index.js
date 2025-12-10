@@ -25,6 +25,7 @@ import { fileURLToPath } from "url";
 import { dirname, join, relative, sep } from "path";
 import { buildMessageComponents } from "./lib/componentsV2Builder.js";
 import { createKazagumo } from './lib/kazagumo.js';
+import { DISCORD_TOKEN, CLIENT_ID, OWNER_ID } from './config.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -205,7 +206,7 @@ client.logger("info", `${client.commands.size} commands active`);
 client.on("messageCreate", async (message) => {
 if (message.author.bot) return;
 if (message.content.startsWith("=>")) {
-if (message.author.id !== "1051160138746171432")
+if (message.author.id !== OWNER_ID)
 return message.sendMessage({
 type: "text",
 content: "❌ Nope. Eval is owner-only.",
@@ -281,7 +282,7 @@ client.logger("success", `Loaded ${client.commands.size} commands`);
 await loadCommands();
 client.kazagumo = createKazagumo(client);
 // ============== DISCORD LOGIN ============== //
-await client.login(global.DISCORD_TOKEN);
+await client.login(DISCORD_TOKEN);
 
 // ============== COMMAND RELOAD ============== //
 fs.watch(commandsPath, { recursive: true }, (eventType, filename) => {
