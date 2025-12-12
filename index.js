@@ -31,34 +31,34 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 
 const buildPayload = (...config) => {
-  const { container, attachments } = buildMessageComponents(...config);
-  const payload = {
-    components: [container],
-    flags: MessageFlags.IsComponentsV2,
-  };
-  if (attachments.length > 0) payload.files = attachments;
-  return payload;
+const { container, attachments } = buildMessageComponents(...config);
+const payload = {
+components: [container],
+flags: MessageFlags.IsComponentsV2,
+};
+if (attachments.length > 0) payload.files = attachments;
+return payload;
 };
 
 // ============== EXTEND PROTOTYPES ==============
 BaseChannel.prototype.sendMessage = async function (...config) {
-  return this.send(buildPayload(...config));
+return this.send(buildPayload(...config));
 };
 
 Message.prototype.editMsg = async function (...config) {
-  return this.edit(buildPayload(...config));
+return this.edit(buildPayload(...config));
 };
 
 Message.prototype.sendMessage = async function (...config) {
-  return this.reply(buildPayload(...config));
+return this.reply(buildPayload(...config));
 };
 
 Message.prototype.send = async function (...config) {
-  return this.reply(buildPayload(...config));
+return this.reply(buildPayload(...config));
 };
 
 BaseInteraction.prototype.sendMessage = async function (...config) {
-  return this.reply(buildPayload(...config));
+return this.reply(buildPayload(...config));
 };
 
 
@@ -66,32 +66,32 @@ BaseInteraction.prototype.sendMessage = async function (...config) {
 
 const originalReply = Message.prototype.reply;
 Message.prototype.reply = async function (tek) {
-  if (typeof tek === "string") {
-    const payload = {
-      flags: MessageFlags.Ephemeral,
-      components: [
-        {
-          type: 17,
-          accent_color: 2621695,
-          spoiler: false,
-          components: [
-            {
-              type: 10,
-              content: tek,
-            },
-            {
-              type: 14,
-            },
-            {
-              type: 10,
-              content: "-# Made With ☕ by [Satzz.](https://satzz.cloud)",
-            },
-          ],
-        },
-      ],
-    };
-    return originalReply.call(this, payload);
-  } else return originalReply.call(this, tek);
+if (typeof tek === "string") {
+const payload = {
+flags: MessageFlags.Ephemeral,
+components: [
+{
+type: 17,
+accent_color: 2621695,
+spoiler: false,
+components: [
+{
+type: 10,
+content: tek,
+},
+{
+type: 14,
+},
+{
+type: 10,
+content: "-# Made With ☕ by [Satzz.](https://satzz.cloud)",
+},
+],
+},
+],
+};
+return originalReply.call(this, payload);
+} else return originalReply.call(this, tek);
 };
 
 // ============== DISCORD CLIENT ============== \\
@@ -207,57 +207,57 @@ message.reply("❌ Terjadi error saat menjalankan command!");
 });
 
 
-const WELCOME_FLAG = MessageFlags.Ephemeral; // Replace 32768 with proper flag constant
+const WELCOME_FLAG = 32768 // Replace 32768 with proper flag constant
 
 // ============== GREETING EVENT ============== //
 client.on("guildMemberAdd", async (member) => {
-  try {
-    const buffer = await createWelcomeCard(member.user, member.guild);
-    let database = {};
-    try {
-      const data = fs.readFileSync(join(__dirname, "database.json"), "utf8");
-      database = JSON.parse(data);
-    } catch (error) {
-      client.logger("error", `Error reading database: ${error}`);
-    }
-    let channel = member.guild.systemChannel;
-    if (database[member.guild.id] && database[member.guild.id].welcomeChannel) {
-      channel = member.guild.channels.cache.get(
-        database[member.guild.id].welcomeChannel
-      );
-    }
-    if (channel) {
-      channel.send({
-        flags: WELCOME_FLAG,
-        files: [{ attachment: buffer, name: "welcome-card.png" }],
-        components: [
-          {
-            type: 17,
-            accent_color: 181404,
-            spoiler: false,
-            components: [
-              {
-                type: 12,
-                items: [
-                  {
-                    media: {
-                      url: "attachment://welcome-card.png",
-                    },
-                  },
-                ],
-              },
-              {
-                type: 10,
-                content: `# Welcome aboard, ${member.user}\nYou’ve officially landed in a space where ideas evolve, creativity syncs, and the community vibes like a well-structured ecosystem.\nHere, every new member adds a fresh spark — and trust me, we’re all about building momentum.\nFeel free to roam, drop a hello, or dive straight into the convo. This place grows because people like you jump in.\n\n## Getting Started\n\n1. Check the rules — keep the place clean and drama-free, just like a production server.\n2. Peek into the channels — each one has its own purpose, workflow, and energy.\n3. Introduce yourself — we’re a community, not a ghost town.\n4. Grab any roles you need — think of it as configuring your user profile in the system.\n5. If you're lost, ping the mods — they’re basically customer support but with more patience.\n\nYou’re all set. Time to plug in and start building memories.`,
-              },
-            ],
-          },
-        ],
-      });
-    }
-  } catch (error) {
-    client.logger("error", `Error generating welcome card: ${error}`);
-  }
+try {
+const buffer = await createWelcomeCard(member.user, member.guild, { style: 'modern', theme: 'neon' });
+let database = {};
+try {
+const data = fs.readFileSync(join(__dirname, "database.json"), "utf8");
+database = JSON.parse(data);
+} catch (error) {
+client.logger("error", `Error reading database: ${error}`);
+}
+let channel = member.guild.systemChannel;
+if (database[member.guild.id] && database[member.guild.id].welcomeChannel) {
+channel = member.guild.channels.cache.get(
+database[member.guild.id].welcomeChannel
+);
+}
+if (channel) {
+channel.send({
+flags: WELCOME_FLAG,
+files: [{ attachment: buffer, name: "welcome-card.png" }],
+components: [
+{
+type: 17,
+accent_color: 181404,
+spoiler: false,
+components: [
+{
+type: 12,
+items: [
+{
+media: {
+url: "attachment://welcome-card.png",
+},
+},
+],
+},
+{
+type: 10,
+content: `# Welcome aboard, ${member.user}\nYou’ve officially landed in a space where ideas evolve, creativity syncs, and the community vibes like a well-structured ecosystem.\nHere, every new member adds a fresh spark — and trust me, we’re all about building momentum.\nFeel free to roam, drop a hello, or dive straight into the convo. This place grows because people like you jump in.\n\n## Getting Started\n\n1. Check the rules — keep the place clean and drama-free, just like a production server.\n2. Peek into the channels — each one has its own purpose, workflow, and energy.\n3. Introduce yourself — we’re a community, not a ghost town.\n4. Grab any roles you need — think of it as configuring your user profile in the system.\n5. If you're lost, ping the mods — they’re basically customer support but with more patience.\n\nYou’re all set. Time to plug in and start building memories.`,
+},
+],
+},
+],
+});
+}
+} catch (error) {
+client.logger("error", `Error generating welcome card: ${error}`);
+}
 });
 
 // ============== READY EVENT ============== //
@@ -276,22 +276,22 @@ await client.login(DISCORD_TOKEN);
 
 
 const debounce = (fn, delay) => {
-  let timer = null;
-  return (...args) => {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
+let timer = null;
+return (...args) => {
+if (timer) clearTimeout(timer);
+timer = setTimeout(() => fn(...args), delay);
+};
 };
 
 // ============== COMMAND RELOAD ============== //
 const debouncedLoadCommands = debounce(() => {
-  client.logger("info", "Reloading commands...");
-  loadCommands();
+client.logger("info", "Reloading commands...");
+loadCommands();
 }, 500);
 
 fs.watch(commandsPath, { recursive: true }, (eventType, filename) => {
-  if (filename && filename.endsWith(".js")) {
-    client.logger("info", `Detected change in ${filename}, scheduling reload...`);
-    debouncedLoadCommands();
-  }
+if (filename && filename.endsWith(".js")) {
+client.logger("info", `Detected change in ${filename}, scheduling reload...`);
+debouncedLoadCommands();
+}
 });
