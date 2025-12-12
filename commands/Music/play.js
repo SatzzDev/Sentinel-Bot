@@ -54,12 +54,12 @@ export default {
       await message.sendMessage([
         {
           type: "text",
-          content: `🔍 **Searching...**\n\nQuery: **${query}**`,
+          content: `<:Search:1446441116076609578> **Searching...**\n\nQuery: **${query}**`,
         },
       ]);
-
-      // Create or get player
-      let player = await message.client.kazagumo.createPlayer({
+      let player = message.client.kazagumo.players.get(message.guild.id)
+      if (!player) {
+      player = await message.client.kazagumo.createPlayer({
         loadBalancer: true,
         guildId: guild.id,
         textId: channel.id,
@@ -67,7 +67,7 @@ export default {
         volume: 100,
         deaf: true,
       });
-
+    }
       // Search for tracks
       const result = await message.client.kazagumo.search(query, {
         requester: member.user,
