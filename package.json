@@ -24,6 +24,7 @@
     "kazagumo": "^3.4.0",
     "moment-timezone": "^0.6.0",
     "nocopyrightsounds-api": "^3.0.2",
+    "openai": "^6.15.0",
     "shoukaku": "^4.2.0"
   }
 }

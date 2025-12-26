@@ -68,7 +68,7 @@ const originalReply = Message.prototype.reply;
 Message.prototype.reply = async function (tek) {
 if (typeof tek === "string") {
 const payload = {
-flags: MessageFlags.Ephemeral,
+flags: MessageFlags.IsComponentsV2,
 components: [
 {
 type: 17,
@@ -81,6 +81,7 @@ content: tek,
 },
 {
 type: 14,
+spacing: 2
 },
 {
 type: 10,
@@ -172,6 +173,92 @@ client.logger("info", `${client.commands.size} commands active`);
 // ============== MESSAGE EVENT ============== //
 client.on("messageCreate", async (message) => {
 if (message.author.bot) return;
+	// --- AFK handling: clear AFK when user returns, and notify when mentioned/replied to ---
+	try {
+		const dbPath = join(__dirname, "database.json");
+		let database = {};
+		try {
+			const data = fs.readFileSync(dbPath, "utf8");
+			database = JSON.parse(data || "{}");
+		} catch (e) {
+			database = {};
+		}
+
+		const guildId = message.guild ? message.guild.id : "dm";
+
+		// If author was AFK, remove AFK and notify
+		if (database[guildId] && database[guildId].afk && database[guildId].afk[message.author.id]) {
+			const entry = database[guildId].afk[message.author.id];
+			delete database[guildId].afk[message.author.id];
+			try {
+				fs.writeFileSync(dbPath, JSON.stringify(database, null, 2), "utf8");
+			} catch (e) {
+				console.error("Failed to write database.json:", e);
+			}
+			const deltaMs = Date.now() - entry.since;
+			const minutes = Math.floor(deltaMs / 60000);
+			const timeStr = minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
+			message.reply(`Welcome back! I removed your AFK (was: ${entry.reason}, ${timeStr} ago).`);
+		}
+
+		// Notify if message mentions AFK users
+		const notified = new Set();
+		if (message.mentions && message.mentions.users) {
+			for (const [id, user] of message.mentions.users) {
+				if (database[guildId] && database[guildId].afk && database[guildId].afk[id] && id !== message.author.id) {
+					const e = database[guildId].afk[id];
+					const deltaMs = Date.now() - e.since;
+					const minutes = Math.floor(deltaMs / 60000);
+					const timeStr = minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
+					message.reply({
+						flags: MessageFlags.Ephemeral,
+						components: [
+							{
+								type: 17,
+								accent_color: 16753920,
+								components: [
+									{ type: 10, content: `<@${id}> is currently AFK: ${e.reason} (since ${timeStr} ago)` },
+								],
+							},
+						],
+					}).catch(() => {});
+					notified.add(id);
+				}
+			}
+		}
+
+		// If this message is a reply, check referenced message author for AFK
+		if (message.reference && message.reference.messageId) {
+			try {
+				const ref = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
+				if (ref && ref.author && ref.author.id !== message.author.id && !notified.has(ref.author.id)) {
+					const id = ref.author.id;
+					if (database[guildId] && database[guildId].afk && database[guildId].afk[id]) {
+						const e = database[guildId].afk[id];
+						const deltaMs = Date.now() - e.since;
+						const minutes = Math.floor(deltaMs / 60000);
+						const timeStr = minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
+						message.reply({
+							flags: MessageFlags.Ephemeral,
+							components: [
+								{
+									type: 17,
+									accent_color: 16753920,
+									components: [
+										{ type: 10, content: `<@${id}> is currently AFK: ${e.reason} (since ${timeStr} ago)` },
+									],
+								},
+							],
+						}).catch(() => {});
+					}
+				}
+			} catch (e) {
+				// ignore fetch errors
+			}
+		}
+	} catch (e) {
+		console.error("AFK handler error:", e);
+	}
 if (message.content.startsWith("=>")) {
 if (message.author.id !== OWNER_ID)
 return message.sendMessage({
@@ -228,31 +315,51 @@ database[member.guild.id].welcomeChannel
 }
 if (channel) {
 channel.send({
-flags: WELCOME_FLAG,
-files: [{ attachment: buffer, name: "welcome-card.png" }],
-components: [
-{
-type: 17,
-accent_color: 181404,
-spoiler: false,
-components: [
-{
-type: 12,
-items: [
-{
-media: {
-url: "attachment://welcome-card.png",
-},
-},
-],
-},
-{
-type: 10,
-content: `# Welcome aboard, ${member.user}\nYou’ve officially landed in a space where ideas evolve, creativity syncs, and the community vibes like a well-structured ecosystem.\nHere, every new member adds a fresh spark — and trust me, we’re all about building momentum.\nFeel free to roam, drop a hello, or dive straight into the convo. This place grows because people like you jump in.\n\n## Getting Started\n\n1. Check the rules — keep the place clean and drama-free, just like a production server.\n2. Peek into the channels — each one has its own purpose, workflow, and energy.\n3. Introduce yourself — we’re a community, not a ghost town.\n4. Grab any roles you need — think of it as configuring your user profile in the system.\n5. If you're lost, ping the mods — they’re basically customer support but with more patience.\n\nYou’re all set. Time to plug in and start building memories.`,
-},
-],
-},
-],
+  "flags": 32768,
+  "components": [
+    {
+      "type": 17,
+      "components": [
+        {
+          "type": 9,
+          "components": [
+            {
+              "type": 10,
+              "content": `<a:LETTER_W:1450778062240354324><a:LETTER_E:1450778043906789478><a:LETTER_L:1450778087368167536><a:LETTER_C:1450778047337861192><a:LETTER_O:1450778050173341850><a:LETTER_M:1450778059149152297><a:LETTER_E:1450778043906789478>\n<a:32877animatedarrowbluelite:1450777021968809986> ${member.user}`
+            }
+          ],
+          "accessory": {
+            "type": 11,
+            "media": {
+              "url": member.user.avatarURL({ format: "png", size: 512 })
+            },
+          }
+        },
+        {
+          "type": 14,
+          "spacing": 1
+        },
+        {
+          "type": 10,
+          "content": "### Getting Started:\n**<a:32877animatedarrowbluelite:1450777021968809986> Check the rules**\n**<a:32877animatedarrowbluelite:1450777021968809986> Peek into the channels **\n**<a:32877animatedarrowbluelite:1450777021968809986> Introduce yourself **\n**<a:32877animatedarrowbluelite:1450777021968809986> Grab any roles you need **\n**<a:32877animatedarrowbluelite:1450777021968809986> If you're lost, ping the mods**"
+        },
+        {
+          "type": 14,
+          "spacing": 1
+        },
+        {
+          "type": 12,
+          "items": [
+            {
+              "media": {
+                "url": "https://i.pinimg.com/originals/e8/3c/20/e83c2059ce102fe56291fc730da5dd56.gif"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
 });
 }
 } catch (error) {
@@ -270,10 +377,9 @@ client.logger("success", `Loaded ${client.commands.size} commands`);
 
 // ============== LOAD COMMAND ON STARTUP ============== //
 await loadCommands();
-client.kazagumo = createKazagumo(client);
 // ============== DISCORD LOGIN ============== //
 await client.login(DISCORD_TOKEN);
-
+client.kazagumo = await createKazagumo(client);
 
 const debounce = (fn, delay) => {
 let timer = null;

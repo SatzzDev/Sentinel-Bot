@@ -50,13 +50,7 @@ export default {
     }
 
     try {
-      // Send searching message
-      await message.sendMessage([
-        {
-          type: "text",
-          content: `<:Search:1446441116076609578> **Searching...**\n\nQuery: **${query}**`,
-        },
-      ]);
+
       let player = message.client.kazagumo.players.get(message.guild.id)
       if (!player) {
       player = await message.client.kazagumo.createPlayer({
@@ -86,41 +80,60 @@ export default {
       if (result.type === "PLAYLIST") {
         player.queue.add(result.tracks);
 
-        await message.sendMessage([
-          {
-            type: "text",
-            content: "<:Check:1446440889646846004> **Playlist Added to Queue**",
-          },
-          {
-            type: "section",
-            texts: [
-              `**${result.playlistName}**`,
-              `<:Folder:1446440949226934323> ${result.tracks.length} tracks added`,
-            ],
-            thumbnail: {
-              url: message.author.displayAvatarURL({ dynamic: true }),
+        await message.reply({
+  "flags": 32768,
+  "components": [
+    {
+      "type": 17,
+      "accent_color": null,
+      "spoiler": true,
+      "components": [
+        {
+          "type": 9,
+          "components": [
+            {
+              "type": 10,
+              "content": `### <:Check:1446440889646846004> Playlist Added to Queue\n${result.playlistName}\n-# ${result.tracks.length} Tracks`
+            }
+          ],
+          "accessory": {
+            "type": 11,
+            "media": {
+              "url": "https://www.freepnglogos.com/uploads/spotify-logo-png/spotify-icon-green-logo-8.png"
             },
-          },
-        ]);
+          }
+        }
+      ]
+    }
+  ]
+});
       } else {
         if (player.playing) return
         const track = result.tracks[0];
         player.queue.add(track);
-        message.sendMessage([
+        message.reply({
+  "flags": 32768,
+  "components": [ {
+    "type": 17,
+    "accent_color": null,
+    "components": [
+      {
+        "type": 9,
+        "components": [
           {
-            type: "text",
-            content: "<:Check:1446440889646846004> **Added to Queue**"
-          },
-          {
-            type: "section",
-            texts: [
-              `[${track.title} - ${track.author}](${track.uri})`,
-              `<:Ticket:1446441165258883235> Duration: ${track.duration}`,
-              `<:Folder:1446440949226934323> Position in queue: **${player.queue.size}**`
-            ],
-            thumbnail: { url: track.thumbnail}
+            "type": 10,
+            "content": `### <:Check:1446440889646846004> Added to Queue\n[${track.title} - ${track.author}](${track.uri})`
           }
-        ]);
+        ],
+        "accessory": {
+          "type": 11,
+          "media": {
+            "url": track.thumbnail
+          }
+        }
+      }
+    ]
+  }]});
       }
       if (!player.playing && !player.paused) {
         await player.play();
